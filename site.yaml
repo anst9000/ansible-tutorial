@@ -1,0 +1,97 @@
+---
+
+## ----------------------------------------------
+## The playbook for both Ubuntu and CentOS server
+## ----------------------------------------------
+
+
+#  ----------------------------------
+#  Installing updates for all servers
+#  ----------------------------------
+- hosts: all
+  become: true
+  pre_tasks:
+
+#  Update and upgrade section
+#  --------------------------
+  - name: Ubuntu - install updates
+    tags: always, ubuntu
+    apt:
+      upgrade: dist
+      update_cache: yes
+    when: ansible_distribution == "Ubuntu"
+
+  - name: CentOS - install updates
+    tags: always, centos
+    dnf:
+      update_only: yes
+      update_cache: yes
+    when: ansible_distribution == "CentOS"
+
+
+#  ----------------------------------
+#  Web Servers
+#  ----------------------------------
+- hosts: web_servers
+  become: true
+  tasks:
+
+#  Install packages section
+#  ------------------------
+  - name: Ubuntu - Install apache and php packages
+    tags: apache, apache2, php, ubuntu
+    apt:
+      name:
+        - apache2
+        - libapache2-mod-php
+      state: latest
+    when: ansible_distribution == "Ubuntu"
+
+  - name: CentOS - Install apache and php packages
+    tags: apache, httpd, php, centos
+    dnf:
+      name:
+        - httpd
+        - php
+      state: latest
+    when: ansible_distribution == "CentOS"
+
+
+#  ----------------------------------
+#  DB Servers
+#  ----------------------------------
+- hosts: db_servers
+  become: true
+  tasks:
+
+#  Install packages section
+#  ------------------------
+  - name: Ubuntu - Install mariadb package
+    tags: db, mariadb, ubuntu
+    apt:
+      name: mariadb-server
+      state: latest
+    when: ansible_distribution == "Ubuntu"
+
+  - name: CentOS - Install mariadb package
+    tags: db, mariadb, centos
+    dnf:
+      name: mariadb
+      state: latest
+    when: ansible_distribution == "CentOS"
+
+
+#  ----------------------------------
+#  File Servers
+#  ----------------------------------
+- hosts: file_servers
+  become: true
+  tasks:
+
+#  Install packages section
+#  ------------------------
+  - name: Ubuntu, CentOS - Install samba package
+    tags: samba
+    package:
+      name: samba
+      state: latest
