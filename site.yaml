@@ -30,6 +30,27 @@
 
 
 #  ----------------------------------
+#  Workstations
+#  ----------------------------------
+- hosts: workstations
+  become: true
+  tasks:
+
+  - name: install unzip
+    package:
+      name: unzip
+
+  - name: install terraform
+    unarchive:
+      src: https://releases.hashicorp.com/terraform/0.15.1/terraform_0.15.1_linux_amd64.zip
+      dest: /usr/local/bin
+      remote_src: yes
+      mode: 0755
+      owner: root
+      group: root
+
+
+#  ----------------------------------
 #  Web Servers
 #  ----------------------------------
 - hosts: web_servers
@@ -56,6 +77,30 @@
       state: latest
     when: ansible_distribution == "CentOS"
 
+  - name: CentOS - start httpd
+    tags: apache, httpd, centos
+    service:
+      name: httpd
+      state: started
+      enabled: yes
+    when: ansible_distribution == "CentOS"
+
+  - name: CentOS - change email address for admin
+    tags: apache, httpd, centos
+    lineinfile:
+      path: /etc/httpd/conf/httpd.conf
+      regexp: '^ServerAdmin'
+      line: ServerAdmin acke@acke.site
+    when: ansible_distribution == "CentOS"
+    register: httpd
+
+  - name: CentOS - restart httpd
+    tags: apache, httpd, centos
+    service:
+      name: httpd
+      state: restarted
+    when: httpd.changed
+
   - name: Ubuntu, CentOS - copy default html file for site
     tags: apache, apache2, httpd
     copy:
@@ -64,6 +109,7 @@
       owner: root
       group: root
       mode: 0644
+
 
 
 #  ----------------------------------
