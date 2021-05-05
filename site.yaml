@@ -6,7 +6,7 @@
 
 
 #  ----------------------------------
-#  Installing updates for all servers
+#  All servers
 #  ----------------------------------
 - hosts: all
   become: true
@@ -14,19 +14,34 @@
 
 #  Update and upgrade section
 #  --------------------------
-  - name: Ubuntu - install updates
+  - name: Ubuntu - update repo cache
     tags: always, ubuntu
     apt:
-      upgrade: dist
       update_cache: yes
+    changed_when: false
     when: ansible_distribution == "Ubuntu"
 
-  - name: CentOS - install updates
+  - name: CentOS - update repo cache
     tags: always, centos
     dnf:
-      update_only: yes
       update_cache: yes
+    changed_when: false
     when: ansible_distribution == "CentOS"
+
+
+#  ----------------------------------
+#  All servers
+#  ----------------------------------
+- hosts: all
+  become: true
+  tasks:
+
+  - name: Ubuntu, CentOS - add ssh key for simone
+    tags: always, user, ubuntu, centos
+    authorized_key:
+      user: simone
+      key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAItF1mg+HgA6A1H8z7n2cT9mg+zoQrqW5S2EOaBqLEb ansible"
+
 
 
 #  ----------------------------------
