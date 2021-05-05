@@ -1,13 +1,5 @@
 ---
 
-## ----------------------------------------------
-## The playbook for both Ubuntu and CentOS server
-## ----------------------------------------------
-
-
-#  ----------------------------------
-#  All servers
-#  ----------------------------------
 - hosts: all
   become: true
   pre_tasks:
@@ -29,139 +21,28 @@
     when: ansible_distribution == "CentOS"
 
 
-#  ----------------------------------
-#  All servers
-#  ----------------------------------
 - hosts: all
   become: true
-  tasks:
+  roles:
+    - base
 
-  - name: Ubuntu, CentOS - add ssh key for simone
-    tags: always, user, ubuntu, centos
-    authorized_key:
-      user: simone
-      key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAItF1mg+HgA6A1H8z7n2cT9mg+zoQrqW5S2EOaBqLEb ansible"
-
-
-
-#  ----------------------------------
-#  Workstations
-#  ----------------------------------
 - hosts: workstations
   become: true
-  tasks:
+  roles:
+    - workstations
 
-  - name: install unzip
-    package:
-      name: unzip
-
-  - name: install terraform
-    unarchive:
-      src: https://releases.hashicorp.com/terraform/0.15.1/terraform_0.15.1_linux_amd64.zip
-      dest: /usr/local/bin
-      remote_src: yes
-      mode: 0755
-      owner: root
-      group: root
-
-
-#  ----------------------------------
-#  Web Servers
-#  ----------------------------------
 - hosts: web_servers
   become: true
-  tasks:
+  roles:
+    - web_servers
 
-#  Install packages section
-#  ------------------------
-  - name: Ubuntu - Install apache and php packages
-    tags: apache, apache2, php, ubuntu
-    apt:
-      name:
-        - apache2
-        - libapache2-mod-php
-      state: latest
-    when: ansible_distribution == "Ubuntu"
-
-  - name: CentOS - Install apache and php packages
-    tags: apache, httpd, php, centos
-    dnf:
-      name:
-        - httpd
-        - php
-      state: latest
-    when: ansible_distribution == "CentOS"
-
-  - name: CentOS - start httpd
-    tags: apache, httpd, centos
-    service:
-      name: httpd
-      state: started
-      enabled: yes
-    when: ansible_distribution == "CentOS"
-
-  - name: CentOS - change email address for admin
-    tags: apache, httpd, centos
-    lineinfile:
-      path: /etc/httpd/conf/httpd.conf
-      regexp: '^ServerAdmin'
-      line: ServerAdmin acke@acke.site
-    when: ansible_distribution == "CentOS"
-    register: httpd
-
-  - name: CentOS - restart httpd
-    tags: apache, httpd, centos
-    service:
-      name: httpd
-      state: restarted
-    when: httpd.changed
-
-  - name: Ubuntu, CentOS - copy default html file for site
-    tags: apache, apache2, httpd
-    copy:
-      src: default_site.html
-      dest: /var/www/html/index.html
-      owner: root
-      group: root
-      mode: 0644
-
-
-
-#  ----------------------------------
-#  DB Servers
-#  ----------------------------------
 - hosts: db_servers
   become: true
-  tasks:
+  roles:
+    - db_servers
 
-#  Install packages section
-#  ------------------------
-  - name: Ubuntu - Install mariadb package
-    tags: db, mariadb, ubuntu
-    apt:
-      name: mariadb-server
-      state: latest
-    when: ansible_distribution == "Ubuntu"
-
-  - name: CentOS - Install mariadb package
-    tags: db, mariadb, centos
-    dnf:
-      name: mariadb
-      state: latest
-    when: ansible_distribution == "CentOS"
-
-
-#  ----------------------------------
-#  File Servers
-#  ----------------------------------
 - hosts: file_servers
   become: true
-  tasks:
+  roles:
+    - file_servers
 
-#  Install packages section
-#  ------------------------
-  - name: Ubuntu, CentOS - Install samba package
-    tags: samba
-    package:
-      name: samba
-      state: latest
